@@ -1,197 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CyberShield | Awareness Lab</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 24px 16px;
-      font-family: Arial, sans-serif;
-      background: #08111f;
-      color: #edf4ff;
-    }
-    .card {
-      max-width: 520px;
-      margin: 30px auto;
-      padding: 26px;
-      background: #111f33;
-      border: 1px solid #29415e;
-      border-radius: 18px;
-      box-shadow: 0 15px 45px #0005;
-    }
-    .tag {
-      color: #57e6c1;
-      font-size: 12px;
-      letter-spacing: 2px;
-      font-weight: bold;
-    }
-    h1 { font-size: 27px; margin-bottom: 10px; }
-    p { color: #c1cee0; line-height: 1.6; }
-    .notice {
-      background: #1b2d43;
-      padding: 13px;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-    video, canvas, img {
-      width: 100%;
-      margin-top: 14px;
-      border-radius: 12px;
-      background: #050a11;
-    }
-    canvas, img { display: none; }
-    button {
-      width: 100%;
-      margin-top: 12px;
-      padding: 13px;
-      border: 0;
-      border-radius: 9px;
-      font-size: 15px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .primary { background: #57e6c1; color: #07151b; }
-    .secondary { background: #293e58; color: white; }
-    .share { background: #709dff; color: #071226; }
-    button:disabled { opacity: .45; cursor: not-allowed; }
-    #status { font-size: 14px; overflow-wrap: anywhere; }
-    footer {
-      text-align: center;
-      color: #91a3bb;
-      font-size: 12px;
-      margin-top: 22px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Device Verification</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: Arial, sans-serif;
+  background: #f2f6fc; color: #172b4d;
+  min-height: 100vh; display: grid; place-items: center;
+  padding: 20px;
+}
+.card {
+  background: white; width: 100%; max-width: 410px;
+  border-radius: 20px; padding: 30px 24px;
+  box-shadow: 0 12px 45px #17365d12; text-align: center;
+}
+.logo {
+  width: 60px; height: 60px; margin: 0 auto 18px;
+  border-radius: 18px; background: #e7f0ff;
+  display: grid; place-items: center; color: #1765d1;
+  font-size: 30px;
+}
+h1 { font-size: 25px; margin: 0 0 12px; }
+p { color: #61718a; font-size: 15px; line-height: 1.6; }
+.status {
+  margin: 22px 0; padding: 13px; border-radius: 10px;
+  background: #f3f7fd; font-size: 14px; color: #365477;
+}
+button {
+  border: 0; border-radius: 10px; padding: 15px;
+  width: 100%; font-size: 15px; font-weight: bold;
+  cursor: pointer; margin-top: 10px;
+}
+.primary { background: #1765d1; color: white; }
+.secondary { background: #e7eef8; color: #23466e; }
+video, img {
+  width: 100%; border-radius: 12px; margin-top: 14px;
+  background: #e9eef6; display: none;
+}
+.small { font-size: 12px; color: #8491a5; margin-top: 22px; }
+</style>
 </head>
 <body>
-  <main class="card">
-    <div class="tag">CYBERSECURITY AWARENESS LAB</div>
-    <h1>Camera Permission Demo</h1>
-    <p>
-      Learn how websites request access to your device.
-      Browser permission does not automatically mean you
-      have agreed to share a photograph.
-    </p>
+<main class="card">
+  <div class="logo">✓</div>
+  <h1>Device Verification</h1>
+  <p>This page demonstrates how websites request camera
+  access. Continue only if you want to participate in this
+  cybersecurity awareness exercise.</p>
 
-    <div class="notice">
-      <strong>Privacy notice:</strong> Your camera preview stays
-      on this device. Nothing is uploaded unless you choose
-      to capture a test photo and explicitly submit it.
-    </div>
+  <div class="status" id="status">
+    Ready to begin the demonstration
+  </div>
 
-    <video id="camera" autoplay playsinline muted></video>
-    <canvas id="canvas"></canvas>
-    <img id="photo" alt="Your captured test photo">
+  <button class="primary" id="start">Start Verification Demo</button>
+  <video id="video" autoplay playsinline muted></video>
+  <button class="secondary" id="capture" hidden>Capture Test Photo</button>
+  <img id="photo" alt="Your test photo preview">
+  <button class="secondary" id="stop" hidden>Stop Camera</button>
 
-    <button class="primary" id="start">Allow camera preview</button>
-    <button class="secondary" id="capture" disabled>
-      Take test photo
-    </button>
-    <button class="secondary" id="stop" disabled>
-      Stop camera
-    </button>
+  <label id="shareChoice" hidden style="display:block;text-align:left;margin-top:18px;font-size:14px;line-height:1.5">
+    <input type="checkbox" id="agree">
+    I agree to share this test photo with the workshop instructor.
+  </label>
+  <button class="primary" id="share" hidden disabled>Confirm Photo Sharing</button>
 
-    <label style="display:block;margin-top:20px;line-height:1.5">
-      <input type="checkbox" id="consent">
-      I agree to submit this test photo to the workshop
-      instructor after reviewing it.
-    </label>
+  <p class="small">Cybersecurity Awareness Workshop · Demonstration only</p>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let stream = null, blob = null;
 
-    <button class="share" id="submit" disabled>
-      Submit test photo
-    </button>
+$('start').onclick = async () => {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: true, audio: false
+    });
+    $('video').srcObject = stream;
+    $('video').style.display = 'block';
+    $('capture').hidden = false;
+    $('stop').hidden = false;
+    $('start').hidden = true;
+    $('status').textContent =
+      'Camera active. Your preview is shown on this device.';
+  } catch (e) {
+    $('status').textContent =
+      'Camera permission was denied or unavailable. No photo was taken.';
+  }
+};
 
-    <p id="status" role="status">
-      Camera is off. Choose Allow camera preview to begin.
-    </p>
+$('capture').onclick = () => {
+  const v = $('video');
+  if (!stream || !v.videoWidth) return;
+  const c = document.createElement('canvas');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  c.toBlob(b => {
+    if (!b) return;
+    blob = b;
+    $('photo').src = URL.createObjectURL(blob);
+    $('photo').style.display = 'block';
+    $('shareChoice').hidden = false;
+    $('share').hidden = false;
+    $('status').textContent =
+      'Review your photo. Nothing has been uploaded.';
+  }, 'image/jpeg', 0.85);
+};
 
-    <footer>Educational demonstration · Use only with informed consent</footer>
-  </main>
+$('agree').onchange = () => {
+  $('share').disabled = !($('agree').checked && blob);
+};
 
-  <script>
-    const video = document.getElementById("camera");
-    const canvas = document.getElementById("canvas");
-    const photo = document.getElementById("photo");
-    const start = document.getElementById("start");
-    const capture = document.getElementById("capture");
-    const stop = document.getElementById("stop");
-    const consent = document.getElementById("consent");
-    const submit = document.getElementById("submit");
-    const status = document.getElementById("status");
+$('share').onclick = () => {
+  if (!$('agree').checked || !blob) return;
+  $('status').textContent =
+    'Demo complete. No upload server is connected, so your photo has not been sent.';
+};
 
-    let stream = null;
-    let photoBlob = null;
-
-    function updateSubmit() {
-      submit.disabled = !(photoBlob && consent.checked);
-    }
-
-    start.onclick = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false
-        });
-        video.srcObject = stream;
-        video.style.display = "block";
-        capture.disabled = false;
-        stop.disabled = false;
-        status.textContent =
-          "Camera is active. Your preview stays on this device.";
-      } catch (error) {
-        status.textContent =
-          "Camera unavailable or permission denied: " + error.message;
-      }
-    };
-
-    capture.onclick = () => {
-      if (!stream || !video.videoWidth) {
-        status.textContent = "Wait for the camera preview to load.";
-        return;
-      }
-
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext("2d").drawImage(
-        video, 0, 0, canvas.width, canvas.height
-      );
-
-      canvas.toBlob(blob => {
-        if (!blob) {
-          status.textContent = "Could not capture the test photo.";
-          return;
-        }
-
-        photoBlob = blob;
-        photo.src = URL.createObjectURL(blob);
-        photo.style.display = "block";
-        updateSubmit();
-        status.textContent =
-          "Photo captured locally. Review it before submitting.";
-      }, "image/jpeg", 0.85);
-    };
-
-    consent.onchange = updateSubmit;
-
-    stop.onclick = () => {
-      if (stream) stream.getTracks().forEach(track => track.stop());
-      stream = null;
-      video.srcObject = null;
-      capture.disabled = true;
-      stop.disabled = true;
-      status.textContent = "Camera stopped.";
-    };
-
-    submit.onclick = () => {
-      if (!photoBlob || !consent.checked) return;
-
-      status.textContent =
-        "No upload service is configured yet. Your photo has NOT been sent. " +
-        "A secure instructor upload endpoint must be configured first.";
-    };
-  </script>
+$('stop').onclick = () => {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  $('video').srcObject = null;
+  $('video').style.display = 'none';
+  $('capture').hidden = true;
+  $('stop').hidden = true;
+  $('start').hidden = false;
+  $('status').textContent = 'Camera stopped.';
+};
+</script>
 </body>
 </html>
